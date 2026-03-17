@@ -6,18 +6,16 @@ import 'package:flutter/foundation.dart';
 import 'package:rastreio_ja/core/constants/app_constants.dart';
 import 'package:rastreio_ja/core/network/network_exception.dart';
 
-/// Cria e configura a instância global do Dio com:
-/// - Timeout padrão
-/// - Interceptor de log (apenas em debug)
-/// - Interceptor de tratamento de erros
-/// - Interceptor de retry (até [AppConstants.apiRetryAttempts] tentativas)
 Dio createDioClient() {
   final dio = Dio(
     BaseOptions(
       baseUrl: AppConstants.apiBaseUrl,
       connectTimeout: const Duration(milliseconds: AppConstants.apiTimeout),
       receiveTimeout: const Duration(milliseconds: AppConstants.apiTimeout),
-      headers: const {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${AppConstants.apiKey}',
+      },
     ),
   );
 
@@ -72,7 +70,7 @@ class _LogInterceptor extends Interceptor {
 }
 
 // -------------------------------------------------------
-// Error Interceptor — converte DioException em NetworkException
+// Error Interceptor
 // -------------------------------------------------------
 class _ErrorInterceptor extends Interceptor {
   @override
@@ -108,7 +106,7 @@ class _ErrorInterceptor extends Interceptor {
 }
 
 // -------------------------------------------------------
-// Retry Interceptor — retenta requisições com falha de conexão
+// Retry Interceptor
 // -------------------------------------------------------
 class _RetryInterceptor extends Interceptor {
   _RetryInterceptor(this._dio);

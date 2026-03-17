@@ -18,36 +18,39 @@ class PackageModelAdapter extends TypeAdapter<PackageModel> {
     };
     return PackageModel(
       id: fields[0] as String,
-      code: fields[1] as String,
+      trackingCode: fields[1] as String,
+      label: fields[2] as String,
       carrier: fields[3] as String,
       status: fields[4] as String,
-      createdAt: fields[5] as DateTime,
-      nickname: fields[2] as String?,
-      lastUpdatedAt: fields[6] as DateTime?,
-      isDelivered: fields[7] as bool,
+      events: (fields[5] as List).cast<TrackingEventModel>(),
+      createdAt: fields[6] as String,
+      lastUpdatedAt: fields[7] as String,
+      estimatedDelivery: fields[8] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, PackageModel obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.code)
+      ..write(obj.trackingCode)
       ..writeByte(2)
-      ..write(obj.nickname)
+      ..write(obj.label)
       ..writeByte(3)
       ..write(obj.carrier)
       ..writeByte(4)
       ..write(obj.status)
       ..writeByte(5)
-      ..write(obj.createdAt)
+      ..write(obj.events)
       ..writeByte(6)
-      ..write(obj.lastUpdatedAt)
+      ..write(obj.createdAt)
       ..writeByte(7)
-      ..write(obj.isDelivered);
+      ..write(obj.lastUpdatedAt)
+      ..writeByte(8)
+      ..write(obj.estimatedDelivery);
   }
 
   @override

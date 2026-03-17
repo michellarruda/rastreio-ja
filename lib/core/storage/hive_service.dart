@@ -9,7 +9,6 @@ class HiveService {
   static Future<void> init() async {
     await Hive.initFlutter();
 
-    // Registrar adapters gerados pelo build_runner
     if (!Hive.isAdapterRegistered(PackageModelAdapter().typeId)) {
       Hive.registerAdapter(PackageModelAdapter());
     }
@@ -17,4 +16,10 @@ class HiveService {
     await Hive.openBox<PackageModel>(AppConstants.packagesBoxName);
     await Hive.openBox<dynamic>(AppConstants.settingsBoxName);
   }
+
+  static Box<PackageModel> get packagesBox =>
+      Hive.box<PackageModel>(AppConstants.packagesBoxName);
+
+  static Box<dynamic> get settingsBox =>
+      Hive.box<dynamic>(AppConstants.settingsBoxName);
 }

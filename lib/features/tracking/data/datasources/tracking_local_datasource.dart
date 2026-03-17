@@ -1,4 +1,4 @@
-// Rastreio Já — DataSource local (Hive)
+// Rastreio Já — TrackingLocalDataSource
 library;
 
 import 'package:hive_flutter/hive_flutter.dart';
@@ -7,10 +7,10 @@ import 'package:rastreio_ja/features/tracking/data/models/package_model.dart';
 
 abstract interface class TrackingLocalDataSource {
   Future<List<PackageModel>> getAllPackages();
-  Future<void> savePackage(final PackageModel package);
-  Future<void> updatePackage(final PackageModel package);
-  Future<void> deletePackage(final String id);
-  PackageModel? getPackageById(final String id);
+  Future<void> savePackage(PackageModel package);
+  Future<void> updatePackage(PackageModel package);
+  Future<void> deletePackage(String id);
+  PackageModel? getPackageById(String id);
 }
 
 class TrackingLocalDataSourceImpl implements TrackingLocalDataSource {
