@@ -11,6 +11,8 @@ import 'package:rastreio_ja/features/tracking/domain/entities/package_status.dar
 import 'package:rastreio_ja/features/tracking/domain/entities/tracking_event_entity.dart';
 import 'package:rastreio_ja/features/tracking/domain/repositories/tracking_repository.dart';
 import 'package:uuid/uuid.dart';
+// adicionar no bloco de imports:
+import 'package:rastreio_ja/core/services/notification_service.dart';
 
 class TrackingRepositoryImpl implements TrackingRepository {
   const TrackingRepositoryImpl({
@@ -71,6 +73,8 @@ class TrackingRepositoryImpl implements TrackingRepository {
     final existing = local.getPackageById(id);
     if (existing == null) throw Exception('Pacote não encontrado: $id');
 
+    final oldStatus = existing.status;
+
     List<TrackingEventModel> events = [];
     try {
       events = await remote.fetchTrackingEvents(existing.trackingCode);
@@ -78,13 +82,22 @@ class TrackingRepositoryImpl implements TrackingRepository {
       events = existing.events;
     }
 
-    final newStatus = _statusToString(_inferStatus(events));
+    final newStatusStr = _statusToString(_inferStatus(events));
     final updated = existing.copyWith(
-      status: newStatus,
+      status: newStatusStr,
       events: events,
       lastUpdatedAt: DateTime.now().toIso8601String(),
     );
     await local.updatePackage(updated);
+
+    if (oldStatus != newStatusStr && events.isNotEmpty) {
+      await NotificationService.instance.showStatusUpdate(
+        packageId: existing.id,
+        packageLabel: existing.label,
+        newStatus: _inferStatus(events),
+        eventDescription: events.first.description,
+      );
+    }
 
     return _modelToEntity(updated);
   }

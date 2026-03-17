@@ -1,13 +1,18 @@
 // Rastreio Já — Rotas (GoRouter) — configuração completa
-// Rastreio Já — Rotas (GoRouter) — configuração completa
 library;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rastreio_ja/core/constants/app_colors.dart';
 import 'package:rastreio_ja/features/settings/presentation/screens/settings_screen.dart';
 import 'package:rastreio_ja/features/tracking/presentation/screens/add_package_screen.dart';
 import 'package:rastreio_ja/features/tracking/presentation/screens/home_screen.dart';
 import 'package:rastreio_ja/features/tracking/presentation/screens/package_detail_screen.dart';
+
+// -------------------------------------------------------
+// Breakpoints
+// -------------------------------------------------------
+const _kWideBreakpoint = 600.0;
 
 // -------------------------------------------------------
 // Rotas nomeadas
@@ -18,12 +23,11 @@ abstract final class AppRoutes {
   static const packageDetail = '/package/:id';
   static const settings = '/settings';
 
-  /// Gera a rota de detalhe com o [id] preenchido
   static String packageDetailOf(final String id) => '/package/$id';
 }
 
 // -------------------------------------------------------
-// Router principal
+// Router principal com ShellRoute
 // -------------------------------------------------------
 final appRouter = GoRouter(
   initialLocation: AppRoutes.home,
@@ -31,55 +35,168 @@ final appRouter = GoRouter(
   errorBuilder: (final BuildContext context, final GoRouterState state) =>
       _NotFoundScreen(location: state.uri.toString()),
   routes: [
-    GoRoute(
-      path: AppRoutes.home,
-      name: 'home',
-      pageBuilder: (
+    ShellRoute(
+      builder: (
         final BuildContext context,
         final GoRouterState state,
+        final Widget child,
       ) =>
-          _fadePage(state, const HomeScreen()),
+          _AdaptiveShell(
+        currentLocation: state.uri.toString(),
+        child: child,
+      ),
+      routes: [
+        GoRoute(
+          path: AppRoutes.home,
+          name: 'home',
+          pageBuilder: (final context, final state) =>
+              _fadePage(state, const HomeScreen()),
+        ),
+        GoRoute(
+          path: AppRoutes.settings,
+          name: 'settings',
+          pageBuilder: (final context, final state) =>
+              _fadePage(state, const SettingsScreen()),
+        ),
+      ],
     ),
+    // Rotas fora do shell — sem NavigationRail
     GoRoute(
       path: AppRoutes.addPackage,
       name: 'add-package',
-      pageBuilder: (
-        final BuildContext context,
-        final GoRouterState state,
-      ) =>
+      pageBuilder: (final context, final state) =>
           _slidePage(state, const AddPackageScreen()),
     ),
     GoRoute(
       path: AppRoutes.packageDetail,
       name: 'package-detail',
-      pageBuilder: (
-        final BuildContext context,
-        final GoRouterState state,
-      ) =>
-          _slidePage(
+      pageBuilder: (final context, final state) => _slidePage(
         state,
         PackageDetailScreen(
           packageId: state.pathParameters['id'] ?? '',
         ),
       ),
     ),
-    GoRoute(
-      path: AppRoutes.settings,
-      name: 'settings',
-      pageBuilder: (
-        final BuildContext context,
-        final GoRouterState state,
-      ) =>
-          _slidePage(state, const SettingsScreen()),
-    ),
   ],
 );
 
 // -------------------------------------------------------
-// Transições de página
+// AdaptiveShell
 // -------------------------------------------------------
+class _AdaptiveShell extends StatelessWidget {
+  const _AdaptiveShell({
+    required this.currentLocation,
+    required this.child,
+  });
 
-/// Transição fade — usada na Home
+  final String currentLocation;
+  final Widget child;
+
+  int get _selectedIndex {
+    if (currentLocation.startsWith(AppRoutes.settings)) return 1;
+    return 0;
+  }
+
+  void _onDestinationSelected(
+    final int index,
+    final BuildContext context,
+  ) {
+    switch (index) {
+      case 0:
+        context.go(AppRoutes.home);
+      case 1:
+        context.go(AppRoutes.settings);
+    }
+  }
+
+  @override
+  Widget build(final BuildContext context) {
+    final isWide = MediaQuery.of(context).size.width >= _kWideBreakpoint;
+
+    if (isWide) {
+      return Scaffold(
+        body: Row(
+          children: [
+            NavigationRail(
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: (final i) =>
+                  _onDestinationSelected(i, context),
+              labelType: NavigationRailLabelType.all,
+              leading: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: const BoxDecoration(
+                        color: AppColors.tealPrimary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.local_shipping_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'RJ',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.tealPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              destinations: const [
+                NavigationRailDestination(
+                  icon: Icon(Icons.inventory_2_outlined),
+                  selectedIcon: Icon(Icons.inventory_2_rounded),
+                  label: Text('Pacotes'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.settings_outlined),
+                  selectedIcon: Icon(Icons.settings_rounded),
+                  label: Text('Config'),
+                ),
+              ],
+            ),
+            const VerticalDivider(width: 1),
+            Expanded(child: child),
+          ],
+        ),
+      );
+    }
+
+    // Mobile — BottomNavigationBar
+    return Scaffold(
+      body: child,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (final i) => _onDestinationSelected(i, context),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.inventory_2_outlined),
+            selectedIcon: Icon(Icons.inventory_2_rounded),
+            label: 'Pacotes',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings_rounded),
+            label: 'Config',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// -------------------------------------------------------
+// Transições
+// -------------------------------------------------------
 CustomTransitionPage<void> _fadePage(
   final GoRouterState state,
   final Widget child,
@@ -89,15 +206,14 @@ CustomTransitionPage<void> _fadePage(
       child: child,
       transitionDuration: const Duration(milliseconds: 250),
       transitionsBuilder: (
-        final BuildContext context,
-        final Animation<double> animation,
-        final Animation<double> secondaryAnimation,
-        final Widget child,
+        final context,
+        final animation,
+        final __,
+        final child,
       ) =>
           FadeTransition(opacity: animation, child: child),
     );
 
-/// Transição slide da direita — usada nas demais telas
 CustomTransitionPage<void> _slidePage(
   final GoRouterState state,
   final Widget child,
@@ -106,10 +222,10 @@ CustomTransitionPage<void> _slidePage(
       key: state.pageKey,
       child: child,
       transitionsBuilder: (
-        final BuildContext context,
-        final Animation<double> animation,
-        final Animation<double> secondaryAnimation,
-        final Widget child,
+        final context,
+        final animation,
+        final __,
+        final child,
       ) =>
           SlideTransition(
         position: Tween<Offset>(
@@ -123,7 +239,7 @@ CustomTransitionPage<void> _slidePage(
     );
 
 // -------------------------------------------------------
-// Observer — loga navegação em debug
+// Observer
 // -------------------------------------------------------
 class _AppRouteObserver extends NavigatorObserver {
   @override
@@ -135,7 +251,10 @@ class _AppRouteObserver extends NavigatorObserver {
   }
 
   @override
-  void didPop(final Route<dynamic> route, final Route<dynamic>? previousRoute) {
+  void didPop(
+    final Route<dynamic> route,
+    final Route<dynamic>? previousRoute,
+  ) {
     debugPrint('[Router] pop: ${route.settings.name}');
   }
 
@@ -149,7 +268,7 @@ class _AppRouteObserver extends NavigatorObserver {
 }
 
 // -------------------------------------------------------
-// Tela 404 — rota não encontrada
+// 404
 // -------------------------------------------------------
 class _NotFoundScreen extends StatelessWidget {
   const _NotFoundScreen({required this.location});
@@ -166,7 +285,7 @@ class _NotFoundScreen extends StatelessWidget {
             const SizedBox(height: 16),
             const Text(
               'Página não encontrada',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
             Text(

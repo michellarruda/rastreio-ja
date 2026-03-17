@@ -10,6 +10,8 @@ import 'package:rastreio_ja/core/router/app_router.dart';
 import 'package:rastreio_ja/features/tracking/domain/entities/package_entity.dart';
 import 'package:rastreio_ja/features/tracking/domain/entities/package_status.dart';
 import 'package:rastreio_ja/features/tracking/presentation/providers/packages_provider.dart';
+import 'package:rastreio_ja/core/widgets/animated_list_item.dart';
+import 'package:rastreio_ja/core/widgets/empty_state_widget.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -44,7 +46,10 @@ class HomeScreen extends ConsumerWidget {
                         itemCount: packages.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 12),
                         itemBuilder: (final context, final index) =>
-                            _PackageCard(package: packages[index]),
+                            AnimatedListItem(
+                          index: index,
+                          child: _PackageCard(package: packages[index]),
+                        ),
                       ),
                     ),
                   ),
@@ -344,51 +349,10 @@ class _EmptyState extends StatelessWidget {
   const _EmptyState();
 
   @override
-  Widget build(final BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(28),
-              decoration: const BoxDecoration(
-                color: Color(0x142ECFCF),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.inventory_2_outlined,
-                size: 56,
-                color: AppColors.tealPrimary,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              AppStrings.homeEmpty,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              AppStrings.homeEmptySubtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: isDark
-                    ? AppColors.textSecondaryDark
-                    : AppColors.textSecondaryLight,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(final BuildContext context) => const EmptyStateWidget(
+        title: AppStrings.homeEmpty,
+        subtitle: AppStrings.homeEmptySubtitle,
+      );
 }
 
 // -------------------------------------------------------
@@ -400,43 +364,8 @@ class _ErrorState extends StatelessWidget {
   final String message;
 
   @override
-  Widget build(final BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              size: 56,
-              color: AppColors.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Erro ao carregar pacotes',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: isDark
-                    ? AppColors.textSecondaryDark
-                    : AppColors.textSecondaryLight,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(final BuildContext context) => ErrorStateWidget(
+        title: 'Erro ao carregar pacotes',
+        subtitle: message,
+      );
 }
