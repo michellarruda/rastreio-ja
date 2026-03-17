@@ -13,13 +13,17 @@ class RastreioJaApp extends ConsumerWidget {
 
   @override
   Widget build(final BuildContext context, final WidgetRef ref) {
-    final themeState = ref.watch(themeProvider);
+    final themeAsync = ref.watch(themeProvider);
+
+    // Enquanto carrega as prefs, usa o tema padrão (Vitality + system)
+    final themeState = themeAsync.valueOrNull ?? const ThemeState();
+
     return MaterialApp.router(
-      title:                      'Rastreio Já',
+      title: 'Rastreio Já',
       debugShowCheckedModeBanner: false,
-      routerConfig:               appRouter,
-      themeMode:                  themeState.mode,
-      theme:     AppTheme.light(ColorSchemePresets.light(themeState.preset)),
+      routerConfig: appRouter,
+      themeMode: themeState.mode,
+      theme: AppTheme.light(ColorSchemePresets.light(themeState.preset)),
       darkTheme: AppTheme.dark(ColorSchemePresets.dark(themeState.preset)),
     );
   }

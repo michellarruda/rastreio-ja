@@ -1,4 +1,5 @@
 // Rastreio Já — Rotas (GoRouter) — configuração completa
+// Rastreio Já — Rotas (GoRouter) — configuração completa
 library;
 
 import 'package:flutter/material.dart';
