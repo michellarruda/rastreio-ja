@@ -12,5 +12,8 @@ class AddPackageUseCase {
     final String code, {
     final String? nickname,
   }) =>
-      _repository.addPackage(code, nickname: nickname);
+      _repository.addPackage(
+        code.trim().toUpperCase(),
+        nickname: nickname,
+      );
 }
